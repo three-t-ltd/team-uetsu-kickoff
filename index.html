@@ -103,7 +103,25 @@ html,body{margin:0;height:100%;background:#15171a;font-family:var(--font-sans);c
 #pager{position:fixed;right:18px;bottom:12px;color:#8a9099;font:14px/1 system-ui;user-select:none}
 @media (prefers-reduced-motion:reduce){.slide *{animation:none!important;clip-path:none!important}.mk:after,.door-rule{transform:none!important}.spark{opacity:1!important}}
 @media print{@page{size:1920px 1080px;margin:0}html,body{background:#fff;overflow:visible;height:auto}#stage{position:static;transform:none!important}.slide{position:relative;display:block;page-break-after:always}.slide *{animation:none!important;clip-path:none!important}.mk:after,.door-rule{transform:none!important}.spark{opacity:1!important}#pager{display:none}}
-</style></head><body><div id="stage">
+</style>
+<style id="navfix">
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:999;display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 16px;background:linear-gradient(to top,rgba(0,0,0,.55),rgba(0,0,0,0));font-family:var(--font-sans)}
+#nav button{appearance:none;border:0;border-radius:999px;background:rgba(255,255,255,.92);color:#232425;font:700 16px/1 var(--font-sans);padding:12px 20px;cursor:pointer}
+#nav button:disabled{opacity:.35;cursor:default}
+#nav .cnt{color:#fff;font:700 14px/1 var(--font-sans);min-width:64px;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+#pager{display:none!important}
+@media print{#nav{display:none!important}
+@page{size:20in 11.25in;margin:0}
+html,body{background:#fff!important;overflow:visible!important;height:auto!important}
+#stage{position:static!important;transform:none!important;width:1920px!important;height:1080px!important;margin:0!important}
+.slide{position:relative!important;display:block!important;page-break-after:always;break-after:page;width:1920px!important;height:1080px!important}
+.slide *{animation:none!important;clip-path:none!important}
+.mk:after,.door-rule{transform:none!important}
+.spark{opacity:1!important}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head><body><div id="stage">
 
 <!-- 01 表紙 -->
 <section class="slide" data-label="01 表紙">
@@ -415,4 +433,41 @@ html,body{margin:0;height:100%;background:#15171a;font-family:var(--font-sans);c
   addEventListener('hashchange',function(){ show((parseInt(location.hash.slice(1),10)||1)-1); });
   show(i);
 })();
-</script></body></html>
+</script>
+<div id="nav"><button id="prev" type="button" aria-label="前へ">◀ 前へ</button><span class="cnt" id="cnt">1 / 25</span><button id="next" type="button" aria-label="次へ">次へ ▶</button></div>
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, cnt=document.getElementById('cnt');
+  function show(n){ i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach(function(s,k){s.classList.remove('active');if(k===i){void s.offsetWidth;s.classList.add('active');}});
+    cnt.textContent=(i+1)+' / '+slides.length;
+    var op=document.getElementById('pager'); if(op){op.textContent=(i+1)+' / '+slides.length;}
+    document.getElementById('prev').disabled=(i===0);
+    document.getElementById('next').disabled=(i===slides.length-1);
+  }
+  document.getElementById('prev').onclick=function(e){e.stopPropagation();show(i-1)};
+  document.getElementById('next').onclick=function(e){e.stopPropagation();show(i+1)};
+  var x0=null;
+  document.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchend',function(e){ if(x0===null)return; var dx=e.changedTouches[0].clientX-x0; x0=null;
+    if(Math.abs(dx)>60){ show(dx<0?i+1:i-1); } },{passive:true});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){show(i+1)}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){show(i-1)}
+    else if(e.key==='Home'){show(0)}else if(e.key==='End'){show(slides.length-1)}
+  });
+  function fit2(){
+    var w=document.documentElement.clientWidth||innerWidth;
+    var hgt=(document.documentElement.clientHeight||innerHeight)-58;
+    var st=document.getElementById('stage');
+    var sc=Math.min(w/1920,hgt/1080);
+    st.style.transformOrigin='center center';
+    st.style.transform='translate(-50%,-50%) scale('+sc+')';
+  }
+  fit2(); addEventListener('resize',fit2); addEventListener('load',fit2); addEventListener('orientationchange',function(){setTimeout(fit2,300)});
+  var h=parseInt(location.hash.slice(1),10);
+  show(isNaN(h)?0:h-1);
+})();
+</script>
+</body></html>
